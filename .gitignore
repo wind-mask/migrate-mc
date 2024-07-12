@@ -1,4 +1,5 @@
 mods
+new_mods
 *.jar
 *.yaml
 *.json
