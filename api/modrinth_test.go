@@ -5,17 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"testing"
 
 	"github.com/wind-mask/migrate-mc/api/modrinth"
 )
 
-var ModrinthClient = NewModrinthClient()
-var logger = log.New(os.Stdout, "", log.LstdFlags|log.Lshortfile)
-
 func TestSearchProjects(t *testing.T) {
+
+	var ModrinthClient = NewModrinthClient()
+
 	// Search for projects
 	facet := modrinth.Facet{}
 	facets := []modrinth.Facet{facet}
@@ -31,6 +30,8 @@ func TestSearchProjects(t *testing.T) {
 
 }
 func TestListProjectsVersions(t *testing.T) {
+	var ModrinthClient = NewModrinthClient()
+
 	// List project versions
 	loaders := []string{"fabric"}
 	game_versions := []string{"1.20.1"}
@@ -47,6 +48,8 @@ func TestListProjectsVersions(t *testing.T) {
 }
 
 func TestGetLatestVersionFromHash(t *testing.T) {
+	var ModrinthClient = NewModrinthClient()
+
 	// Get latest version from hash
 	hasher := sha512.New()
 	modFilePath := "../appleskin-fabric-mc1.19.2-2.5.1.jar"

@@ -3,8 +3,8 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 
@@ -12,7 +12,7 @@ import (
 )
 
 func (c *Client) SearchProjects(query string, facets []modrinth.Facet, index modrinth.Index, offset int, limit int) (modrinth.SearchResult, error) {
-	log.Println("SearchProjects")
+	Logger.Println("SearchProjects")
 	facetsStr := "&facets=\"["
 	for _, facet := range facets {
 		v := reflect.ValueOf(facet)
@@ -42,16 +42,21 @@ func (c *Client) SearchProjects(query string, facets []modrinth.Facet, index mod
 	}
 	api := fmt.Sprintf("search?query=%s&index=%s&offset=%d&limit=%d%s", query, index, offset, limit, facetsStr)
 	resp, err := c.get(api)
-	log.Println(resp.Status)
 	if err != nil {
-		return modrinth.SearchResult{}, err
+		return modrinth.SearchResult{}, errors.Join(err, errors.New("get failed"))
+	}
+	if resp.StatusCode != 200 {
+		return modrinth.SearchResult{}, errors.New("get failed: " + resp.Status)
 	}
 	var result modrinth.SearchResult
 	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return modrinth.SearchResult{}, errors.Join(err, errors.New("json.Decode failed"))
+	}
 	return result, err
 }
 func (c *Client) ListProjectsVersions(idORslug string, loaders []string, game_versions []string) ([]modrinth.Version, error) {
-	log.Println("ListProjectsVersions")
+	Logger.Println("ListProjectsVersions")
 	for i, loader := range loaders {
 		loaders[i] = "'" + loader + "'"
 	}
@@ -71,30 +76,40 @@ func (c *Client) ListProjectsVersions(idORslug string, loaders []string, game_ve
 	api := fmt.Sprintf("project/%s/version?%s", idORslug, queryStr)
 	// log.Println(api)
 	resp, err := c.get(api)
-	log.Println(resp.Status)
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(err, errors.New("get failed"))
+	}
+	if resp.StatusCode != 200 {
+		return nil, errors.New("get failed: " + resp.Status)
 	}
 	var result []modrinth.Version
 	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return nil, errors.Join(err, errors.New("json.Decode failed"))
+	}
 	return result, err
 }
 func (c *Client) GetLatestVersionFromHash(hashAlgorithm modrinth.HashAlgorithm, hash string, getLatestVersionFromHashBody modrinth.GetLatestVersionFromHashBody) (modrinth.Version, error) {
-	log.Println("GetLatestVersionFromHash")
+	Logger.Println("GetLatestVersionFromHash")
 	api := fmt.Sprintf("version_file/%s/update?algorithm=%s", hash, hashAlgorithm)
 	body, err := json.Marshal(getLatestVersionFromHashBody)
 	if err != nil {
-		return modrinth.Version{}, err
+		return modrinth.Version{}, errors.Join(err, errors.New("json.Marshal failed"))
 	}
 	// log.Println(string(body))
-	log.Println(api)
+	// log.Println(api)
 	reader := bytes.NewReader(body)
 	resp, err := c.post(api, reader)
-	log.Println(resp.Status)
 	if err != nil {
-		return modrinth.Version{}, err
+		return modrinth.Version{}, errors.Join(err, errors.New("post failed"))
+	}
+	if resp.StatusCode != 200 {
+		return modrinth.Version{}, errors.New("post failed: " + resp.Status)
 	}
 	var result modrinth.Version
 	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return modrinth.Version{}, errors.Join(err, errors.New("json.Decode failed"))
+	}
 	return result, err
 }

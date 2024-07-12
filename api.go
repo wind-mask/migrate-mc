@@ -1,1 +1,1 @@
-package migratemc
+package main
